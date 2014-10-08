@@ -14,7 +14,7 @@ var builder = require('./builder.js');
 
 var jsmap = require('./jsmap.js');
 
-var basePath = './../lib';
+var basePath = '../../lib';
 
 var componentsPath = basePath + '/components';
 
@@ -23,6 +23,8 @@ var modulesPath = basePath + '/modules';
 var productionPath = basePath + '/production';
 
 var libcomponentsPath = '//js.youxi.bdimg.com/lib/';
+
+conf.initialize();
 
 var rl = readline.createInterface(process.stdin, process.stdout);
 
@@ -36,6 +38,7 @@ console.log('----------------------------------------------'.green)
 console.log('');
 rl.setPrompt('BS> ');
 rl.prompt();
+
 rl.on('line', function(line) {
 
 	var command = line.split(' ');
@@ -90,7 +93,7 @@ function build() {
 
 	var lastBuildDate = conf.getLastBuildTime();
 
-	if (!lastBuildDate) { // initial build
+	if (!lastBuildDate) { // 初始化构建
 
 		console.log('初始化构建'.green)
 
@@ -98,13 +101,15 @@ function build() {
 
 			if (answer == 'y') {
 
-				conf.syncLastBuildTime(1);
+			    conf.syncLastBuildTime(1);
 
 			} else {
 
 				conf.syncLastBuildTime();
 
 			}
+
+			conf.sync();
 
 			console.log('初始化完成');
 
@@ -164,7 +169,7 @@ function build() {
 
 	});
 
-	var buildPhrases = builder.buildProductionFiles(componentsPath, buildTree);
+	var buildPhrases = builder.buildProductionFiles(basePath, buildTree);
 
 	buildPhrases.forEach(function(bp) {
 
@@ -173,6 +178,8 @@ function build() {
 	});
 
 	conf.syncLastBuildTime();
+
+	conf.sync();
 }
 
 function pack(components) {
@@ -185,7 +192,7 @@ function pack(components) {
 
 	});
 
-	//check input files exists
+	//检查输入的文件是否存在
 
 	if (!builder.checkPathsExists(comPaths)) {
 
@@ -194,7 +201,7 @@ function pack(components) {
 		return;
 	}
 
-	//read each file dependencies
+	//读取每一个文件的依赖关系
 
 	var dependencies = [];
 
@@ -268,11 +275,11 @@ function pack(components) {
 
 	if (baseLibDependencies.length) {
 
-		console.log('请手动引用基础库：'.blue);
+	    console.log('请手动引用基础库：'.magenta);
 
 		baseLibDependencies.forEach(function(bsl) {
 
-			console.log(embedToScriptTag(bsl).blue);
+		    console.log(embedToScriptTag(bsl).magenta);
 
 		})
 

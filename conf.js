@@ -1,12 +1,15 @@
-﻿var fs = require('fs');
+﻿'use strict';
+
+var fs = require('fs');
 
 var confPath = './bs.conf';
 
 // 键列表
 var CKEY = {
 
-    MTIME: 'mtime'
+    MTIME: 'mtime',
 
+    LAST_BUILD_TIME: 'last_build_time'
 }
 
 // 配置对象
@@ -18,32 +21,13 @@ var config = {
     //序列化到字符串
     _serialize: function (object) {
 
-        var result = [];
-
-        for (var key in object) {
-
-            result.push(encodeURIComponent(key) + '=' + encodeURIComponent(object[key]));
-
-        }
-
-        return result.join('\r\n');
+        return JSON.stringify(object);
     },
 
     // 反序列化到对象
     _deserialize: function (str) {
 
-        var result = {};
-
-        var keypairs = str.split('\r\n');
-
-        for (var i = 0 ; i < keypairs.length ; i++) {
-
-            var keypair = keypairs[i].split('=');
-
-            result[decodeURIComponent(keypair[0])] = decodeURIComponent(keypair[1]);
-        }
-
-        return result;
+        return JSON.parse(str);
     },
 
     // 从文件系统中读取配置文件内容
@@ -58,14 +42,14 @@ var config = {
             });
 
         }
-        return 0;
+        return '{}';
 
     },
 
     // 将内容写入到文件系统中的配置文件
     _writeConfigFile: function (contentStr) {
 
-        fs.readFileSync(confPath, contentStr, {
+        fs.writeFileSync(confPath, contentStr, {
 
             encoding: 'utf8'
 
@@ -182,16 +166,30 @@ var config = {
 
 };
 
+exports.sync = function () {
+
+    config.sync();
+}
+
+exports.setValue = function (key, value) {
+
+    config.setValue(key, value);
+}
+
+exports.getValue = function (key) {
+
+    return config.getValue(key);
+}
+
+exports.initialize = function () {
+
+    config.initialize();
+}
+
+
 exports.getLastBuildTime = function () {
 
-    if (fs.existsSync(confPath)) {
-
-        return parseInt(fs.readFileSync(confPath, {
-            encoding: 'utf8'
-        }));
-
-    }
-    return 0;
+    return config.getValue(CKEY.LAST_BUILD_TIME) || 0;
 
 };
 
@@ -199,12 +197,11 @@ exports.syncLastBuildTime = function (initTime) {
 
     if (typeof initTime !== 'undefined') {
 
-        fs.writeFileSync(confPath, initTime);
+        config.setValue(CKEY.LAST_BUILD_TIME, initTime);
 
     } else {
 
-        fs.writeFileSync(confPath, new Date().getTime());
+        config.setValue(CKEY.LAST_BUILD_TIME, new Date().getTime());
 
     }
-
 };
